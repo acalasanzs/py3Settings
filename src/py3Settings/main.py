@@ -52,9 +52,9 @@ class Handler:
         self.save = Handler.safeCheck(save)
     @staticmethod
     def safeCheck(fun):
-        def wrapper(filename:str, *args, **kwargs):
-            assert Handler.fileStr(filename)
-            fun(filename, *args, **kwargs)
+        def wrapper(*args, **kwargs):
+            assert Handler.fileStr(kwargs.get('filename') or args[0])
+            return fun(*args, **kwargs)
         return wrapper
     @classmethod
     def fileStr(cls, file: str) -> bool:
@@ -84,12 +84,13 @@ class AppSettings():
                 return x.load(filename, path)
         return False
     @staticmethod
-    def _saveFile(type: str, data: list, filename:str, path = os.getcwd()):
+    def _saveFile(data: list, filename:str, path = os.getcwd()):
+        type = "."+filename.split(".")[1]
         for x in formats:
             if x.format == type:
                 if(len(filename) == 0):
                     filename = f"settings{x.format}"
-                return x.save(data, filename, path)
+                return x.save(data, filename = filename, path = path)
         return False
     def loadFile(self, *args,**kwargs):
         data = AppSettings._loadFile(*args,**kwargs)
@@ -97,14 +98,16 @@ class AppSettings():
             raise SystemExit("Format not supported")
         return self.load(data)
     def saveFile(self, *args,**kwargs):
-        return AppSettings._saveFile(data = self.dict, *args,**kwargs)
+        return AppSettings._saveFile(AppSettings.preProcess(self.dict), *args,**kwargs)
+    @staticmethod
+    def preProcess(data: dict):
+        return [x for x in data.values()]
     def load(self, data: list):
-        print(data)
         assert isinstance(data, list)
         for i,statement in enumerate(data):
             for option in self.options:
                 if option.optionName in statement and statement[option.optionName] == option.optionID:
-                    for attr in statement.keys():
+                    for attr in [y for y in list(statement.keys()) if y != option.optionName]:
                         attr_get = getWithAttr(option.attributes, attr, 'attr')
                         val = attr_get.validate(statement[attr])
                         if attr in [x.attr for x in option.attributes] and not val:
