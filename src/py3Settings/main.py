@@ -102,6 +102,21 @@ class AppSettings():
     @staticmethod
     def preProcess(data: dict):
         return [x for x in data.values()]
+    def validateAll(self):
+        i = 0
+        for key, value in self.dict.items():
+            for option in self.options:
+                if option.optionName in value and value[option.optionName] == option.optionID:
+                    for attr in [y for y in list(value.keys()) if y != option.optionName]:
+                        attr_get = getWithAttr(option.attributes, attr, 'attr')
+                        val = attr_get.validate(value[attr])
+                        if attr in [x.attr for x in option.attributes] and not val:
+                            raise SystemExit(f"Value ({value[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}")
+                        if callable(val):
+                            value[attr] = val()
+                    self.dict[option.name] = value
+                    self.defaults[option.name] = value[option.default.attr]
+            i += 1
     def load(self, data: list):
         assert isinstance(data, list)
         for i,statement in enumerate(data):
