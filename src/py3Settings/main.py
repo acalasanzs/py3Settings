@@ -1,15 +1,18 @@
-import json, os
+import os
 from typing import Any, Callable, List
+import file
 # from packages.AppSettings.utils import staticinstance
-
+import re
 class Attribute:
-    def __init__ (self, attr: str, typ : Any | None = None, validate:  Callable[[object], bool] | None = None, default: bool = False):
+    def __init__ (self, attr: str, typ : Any | None = None, validate:  Callable[[object], bool] | None = None, default: bool = False, getter: Callable[[], Any] = None):
         self.attr = attr
         if typ is None and validate is Callable[[object], bool]:
             self.validate = validate
         elif validate is None and typ is not None:
             self.typ = typ
-            self.validate = lambda a: isinstance(a, typ)
+            self.validate = lambda a: isinstance(a, typ) if not hasattr(self, 'get') else self.get
+            if getter is not None:
+                self.get = getter
         else:
             raise SystemExit("No type!")
         self.default = default
@@ -36,20 +39,78 @@ def getWithAttr(list: list, attr: str, name: str):
         if getattr(x, name) == attr:
             return x
     return False
+def handle(format, dict:dict):
+    ins = Handler(format)
+    ins.init(**dict)
+    return ins
+class Handler:
+    invalid = r'[<>:"/\|?* ]'
+    def __init__(self, format: str):
+        self.format = format
+    def init(self, load: Callable[[str,str], dict], save: Callable[[dict], str | bool]):
+        self.load = Handler.safeCheck(load)
+        self.save = Handler.safeCheck(save)
+    @staticmethod
+    def safeCheck(fun):
+        def wrapper(filename:str, *args, **kwargs):
+            assert Handler.fileStr(filename)
+            fun(filename, *args, **kwargs)
+        return wrapper
+    @classmethod
+    def fileStr(cls, file: str) -> bool:
+        file = file.split(".")
+        if(len(file) != 2):
+            return False
+        filename = file[0]
+        original = file[0]
+        if re.search(cls.invalid, filename):
+            return False
+        if original != filename:
+            return False
+        return True
+formats = [handle('.json',file.JSON)]
 class AppSettings():
     def __init__(self, options: List[Option]):
         self.options = options
         self.dict = dict()
         self.defaults = dict()
-    def load(self, filename = "settings.json", path = os.getcwd()):
-        json = AppSettings.loadJson(filename, path)
-        assert isinstance(json, list)
-        for i,statement in enumerate(json):
+    @staticmethod
+    def _loadFile(filename:str, path = os.getcwd()):
+        type = "."+filename.split(".")[1]
+        for x in formats:
+            if x.format == type:
+                if(len(filename) == 0):
+                    filename = f"settings{x.format}"
+                return x.load(filename, path)
+        return False
+    @staticmethod
+    def _saveFile(type: str, data: list, filename:str, path = os.getcwd()):
+        for x in formats:
+            if x.format == type:
+                if(len(filename) == 0):
+                    filename = f"settings{x.format}"
+                return x.save(data, filename, path)
+        return False
+    def loadFile(self, *args,**kwargs):
+        data = AppSettings._loadFile(*args,**kwargs)
+        if data is False:
+            raise SystemExit("Format not supported")
+        return self.load(data)
+    def saveFile(self, *args,**kwargs):
+        return AppSettings._saveFile(data = self.dict, *args,**kwargs)
+    def load(self, data: list):
+        print(data)
+        assert isinstance(data, list)
+        for i,statement in enumerate(data):
             for option in self.options:
                 if option.optionName in statement and statement[option.optionName] == option.optionID:
                     for attr in statement.keys():
-                        if attr in [x.attr for x in option.attributes] and not getWithAttr(option.attributes, attr, "attr").validate(statement[attr]):
-                            raise SystemExit(f"Value ({statement[attr]}) [{i}] Validation Failure for {getWithAttr(option.attributes, attr, 'attr').attr} of {option.name}")
+                        attr_get = getWithAttr(option.attributes, attr, 'attr')
+                        val = attr_get.validate(statement[attr])
+                        if attr in [x.attr for x in option.attributes] and not val:
+                            raise SystemExit(f"Value ({statement[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}")
+                        if callable(val):
+                            statement[attr] = val()
                     self.dict[option.name] = statement
                     self.defaults[option.name] = statement[option.default.attr]
     def getSetting(self, name: str, attr: str | None):
@@ -66,7 +127,4 @@ class AppSettings():
             text += " ".join([str(x) for x in [property, ":", value]])
             text += "\n"
         return text
-    @staticmethod
-    def loadJson(filename = "settings.json", path = os.getcwd()):
-        return json.load(open(os.path.join(path,filename)))
         
