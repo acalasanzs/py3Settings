@@ -1,3 +1,4 @@
-from AppSettings.main import AppSettings
-from AppSettings import utils
+from .main import AppSettings, Option, Attribute
+# from . import utils
+from . import file
 # No hay recursividad

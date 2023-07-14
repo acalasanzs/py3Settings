@@ -1,6 +1,6 @@
 import os
 from typing import Any, Callable, List
-import file
+from . import file
 # from packages.AppSettings.utils import staticinstance
 import re
 class Attribute:
