@@ -1,8 +1,8 @@
 import os
 from typing import Any, Callable, List
-import py3Settings
-from py3Settings import file
-from py3Settings.proxy import *
+import file
+from proxy import *
+from utils import *
 # from packages.AppSettings.utils import staticinstance
 class Attribute:
     def __init__ (self, attr: str, typ : Any | None = None, validate:  Callable[[object], bool] | None = None, default: bool = False, getter: Callable[[], Any] = None):
