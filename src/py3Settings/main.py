@@ -1,8 +1,9 @@
 import os
 from typing import Any, Callable, List
-from . import file
+import py3Settings
+from py3Settings import file
+from py3Settings.proxy import *
 # from packages.AppSettings.utils import staticinstance
-import re
 class Attribute:
     def __init__ (self, attr: str, typ : Any | None = None, validate:  Callable[[object], bool] | None = None, default: bool = False, getter: Callable[[], Any] = None):
         self.attr = attr
@@ -16,9 +17,6 @@ class Attribute:
         else:
             raise SystemExit("No type!")
         self.default = default
-def printObjProps(theObject):
-    for property, value in vars(theObject).items():
-        print(property, ":", value)
 class Option():
     def __init__(self, name: str, optionName: str = "name", optionID: str | None = None):
         self.name = name
@@ -34,41 +32,12 @@ class Option():
         if attribute.default:
             self.default = attribute
         self.attributes.append(attribute)
-def getWithAttr(list: list, attr: str, name: str):
-    for x in list:
-        if getattr(x, name) == attr:
-            return x
-    return False
-def handle(format, dict:dict):
-    ins = Handler(format)
-    ins.init(**dict)
-    return ins
-class Handler:
-    invalid = r'[<>:"/\|?* ]'
-    def __init__(self, format: str):
-        self.format = format
-    def init(self, load: Callable[[str,str], dict], save: Callable[[dict], str | bool]):
-        self.load = Handler.safeCheck(load)
-        self.save = Handler.safeCheck(save)
-    @staticmethod
-    def safeCheck(fun):
-        def wrapper(*args, **kwargs):
-            assert Handler.fileStr(kwargs.get('filename') or args[0])
-            return fun(*args, **kwargs)
-        return wrapper
-    @classmethod
-    def fileStr(cls, file: str) -> bool:
-        file = file.split(".")
-        if(len(file) != 2):
-            return False
-        filename = file[0]
-        original = file[0]
-        if re.search(cls.invalid, filename):
-            return False
-        if original != filename:
-            return False
-        return True
 formats = [handle('.json',file.JSON)]
+
+def addFormatSupport(Handler: Handler):
+    formats.append(Handler)
+def showFileDefs():
+    return file
 class AppSettings():
     def __init__(self, options: List[Option]):
         self.options = options
