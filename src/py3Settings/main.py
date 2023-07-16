@@ -1,8 +1,9 @@
 import os
-from typing import Any, Callable, List
+from typing import Any, Callable, Iterator, List
 import file
 from proxy import *
 from utils import *
+from collections.abc import Mapping
 # from packages.AppSettings.utils import staticinstance
 class Attribute:
     def __init__ (self, attr: str, typ : Any | None = None, validate:  Callable[[object], bool] | None = None, default: bool = False, getter: Callable[[], Any] = None):
@@ -38,11 +39,29 @@ def addFormatSupport(Handler: Handler):
     formats.append(Handler)
 def showFileDefs():
     return file
-class AppSettings():
+class AppSettings(Mapping):
     def __init__(self, options: List[Option]):
         self.options = options
         self.dict = dict()
         self.defaults = dict()
+        self.i = 0
+    def __getitem__(self, __key: str | int) -> Option:
+        for i,x in enumerate(self.options):
+            if __key == x.name or i == __key:
+                return x
+    def __delitem__(self, __key: str | int) -> None:
+        for i,x in enumerate(self.options):
+            if __key == x.name or i == __key:
+                self.options.remove(x)
+                return
+    def __iter__(self):
+        return self
+    def __len__(self) -> int:
+        return self.options.__len__()
+    def __next__(self):
+        x = self.options[self.i]
+        self.i += 1
+        return x
     @staticmethod
     def _loadFile(filename:str, path = os.getcwd()):
         type = "."+filename.split(".")[1]
@@ -70,7 +89,7 @@ class AppSettings():
         return AppSettings._saveFile(AppSettings.preProcess(self.dict), *args,**kwargs)
     @staticmethod
     def preProcess(data: dict):
-        return [x for x in data.values()]
+        return list(data.values())
     def validateAll(self):
         i = 0
         for key, value in self.dict.items():
