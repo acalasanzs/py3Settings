@@ -1,0 +1,6 @@
+{
+    "sure": [
+        {"ask": true},
+        {"ask": false}
+    ]
+}
