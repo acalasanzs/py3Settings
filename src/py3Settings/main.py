@@ -59,6 +59,8 @@ class AppSettings(Mapping):
     def __len__(self) -> int:
         return self.options.__len__()
     def __next__(self):
+        if self.__len__()  == self.i:
+            raise StopIteration
         x = self.options[self.i]
         self.i += 1
         return x
