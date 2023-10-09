@@ -1,20 +1,18 @@
-import typer
-import subprocess
-from PyInquirer import prompt, print_json, Separator
-from rich import print as rprint
+import questionary
 
-app = typer.Typer()
+color = questionary.select(
+    "Select a color:",
+    choices=[
+        "Red",
+        "Blue",
+        "Yellow",
+        "Green",
+        "Orange",
+        "Purple",
+        "Pink",
+        "Brown",
+        "Gray",
+    ],
+).ask()
 
-
-@app.command("hi")
-def sample_func():
-    rprint("[red bold]Hi[/red bold] [yellow]World[yello]")
-
-@app.command("hello")
-def sample_func():
-    rprint("[red bold]Hello[/red bold] [yellow]World[yello]")
-
-
-
-if __name__ == "__main__":
-    app()    
+print(f"You selected the color {color}.")
