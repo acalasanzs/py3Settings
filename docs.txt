@@ -1,4 +1,4 @@
-import os
+My package py3Settings is formed by main.py: ```import os
 from typing import Any, Callable, Iterator, List
 import file
 from proxy import *
@@ -135,4 +135,41 @@ class AppSettings(Mapping):
             text += " ".join([str(x) for x in [property, ":", value]])
             text += "\n"
         return text
-        
+        ```, proxy.py: ```from typing import Callable
+import re
+def handle(format, dict:dict):
+    ins = Handler(format)
+    ins.init(**dict)
+    return ins
+class Handler:
+    invalid = r'[<>:"/\|?* ]'
+    def __init__(self, format: str):
+        self.format = format
+    def init(self, load: Callable[[str,str], dict], save: Callable[[dict], str | bool]):
+        self.load = Handler.safeCheck(load)
+        self.save = Handler.safeCheck(save)
+    @staticmethod
+    def safeCheck(fun):
+        def wrapper(*args, **kwargs):
+            assert Handler.fileStr(kwargs.get('filename') or args[0])
+            return fun(*args, **kwargs)
+        return wrapper
+    @classmethod
+    def fileStr(cls, file: str) -> bool:
+        file = file.split(".")
+        if(len(file) != 2):
+            return False
+        filename = file[0]
+        original = file[0]
+        if re.search(cls.invalid, filename):
+            return False
+        if original != filename:
+            return False
+        return True```, utils.py: ```def printObjProps(theObject):
+    for property, value in vars(theObject).items():
+        print(property, ":", value)
+def getWithAttr(list: list, attr: str, name: str):
+    for x in list:
+        if getattr(x, name) == attr:
+            return x
+    return False``` and __init__.py. Please write the docs and explain me all arround with a large and descriptive text
