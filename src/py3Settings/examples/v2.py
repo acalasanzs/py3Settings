@@ -1,4 +1,6 @@
-from setdir import tests
+from setdir import get_path, get
+tests = get("child","tests", 1)
+# tests = get_path("tests")
 print(tests)
 from main import AppSettings, Option, Attribute
 from typing import List

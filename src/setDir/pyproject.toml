@@ -1,6 +1,20 @@
+[tool.poetry]
+name = "setdir"
+version = "1.1.1"
+description = "Recognises parent and ? dirs from the script main file"
+authors = ["Albert Calasanz <acalasanzs@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/acalasanzs/py3Settings"
+repository = "https://github.com/acalasanzs/py3Settings"
+documentation = "https://github.com/acalasanzs/py3Settings/blob/master/README.md"
+keywords = ["json", "settings", "manager"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.6"
+
+[tool.poetry.dev-dependencies]
+
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.masonry.api"
