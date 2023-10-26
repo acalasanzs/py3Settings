@@ -1,4 +1,5 @@
 from setdir import tests
+print(tests)
 from main import AppSettings, Option, Attribute
 from typing import List
 
