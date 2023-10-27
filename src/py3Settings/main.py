@@ -202,8 +202,20 @@ class AppSettings(Mapping):
         return self.load(data)
 
     def saveFile(self, *args, **kwargs):
-        return AppSettings._saveFile(self.dict, *args, **kwargs)
-
+        return AppSettings._saveFile(self.preload(), *args, **kwargs)
+    def preload(self):
+        all = []
+        for option in self.options:
+            actual_name = option.name
+            actual_optionName = option.optionName
+            if type(option.default) is Attribute:
+                all.append(self.getSetting(actual_name, actual_optionName))
+            else:
+                #getSetting must import InAttribute recursive                       ###################################################################
+                sub_actual = self.getSetting(actual_name, actual_optionName)
+                sub_preloaded = sub_actual.preload()
+                all.append(sub_preloaded)
+        return all
     def validateAll(self):
         i = 0
         for key, value in self.dict.items():
@@ -258,27 +270,30 @@ class AppSettings(Mapping):
 
         if attr is None:
             return getSettingClosure(self.defaults[name])
-        try:
-            option = next((option for option in self.options if option.name == name), None)
-            if option is None:
-                raise KeyError(f"Option {name} not found in settings")
+        # try:
+        option = next((option for option in self.options if option.name == name), None)
+        if option is None:
+            raise KeyError(f"Option {name} not found in settings")
 
-            attr_get = getWithAttr(option.attributes + option.inAttributes, attr, "attr")
-            if attr_get is None:
-                raise KeyError(f"Attribute {attr} not found in {option.name}")
+        attr_get = getWithAttr(option.attributes, attr, "attr")
+        if attr_get is None:
+            raise KeyError(f"Attribute {attr} not found in {option.name}")
 
-            if isinstance(attr_get, InAttribute):
-                result = {}
-                for sub_attr in attr_get.options:
-                    sub_attr_get = getWithAttr(option.attributes + option.inAttributes, sub_attr.attr, "attr")
-                    if sub_attr_get is None:
-                        raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
-                    result[sub_attr.attr] = getSettingClosure(self.dict[name].get(sub_attr.attr, sub_attr.default))
-                return result
-            else:
+        if isinstance(attr_get, InAttribute):
+            result = {}
+            for sub_attr in attr_get.options:
+                sub_attr_get = getWithAttr(option.attributes + option.inAttributes, sub_attr.attr, "attr")
+                if sub_attr_get is None:
+                    raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
+                result[sub_attr.attr] = getSettingClosure(self.dict[name].get(sub_attr.attr, sub_attr.default))
+            return result
+        else:
+            try:
                 return getSettingClosure(self.dict[name][attr])
-        except KeyError:
-            raise KeyError(f"Attribute {attr} not found in settings")
+            except KeyError:
+                return self.defaults[name].default
+        # except KeyError:
+        #     raise KeyError(f"Attribute {attr} not found in settings")
 
     def getSettings(self):
         return self.dict

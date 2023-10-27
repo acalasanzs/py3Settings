@@ -1,0 +1,10 @@
+{
+  "content": {
+    "warn": "Already with content in it!",
+    "ask": "<main.Attribute object at 0x00000253E5075820>"
+  },
+  "exists": {
+    "warn": "{x} already exists!",
+    "ask": "<main.Attribute object at 0x00000253E508A2A0>"
+  }
+}
