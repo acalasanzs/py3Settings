@@ -4,7 +4,7 @@ import file
 from proxy import *
 from utils import *
 from collections.abc import Mapping
-
+import uuid
 
 # from packages.AppSettings.utils import staticinstance
 class Attribute:
@@ -64,8 +64,31 @@ class Attribute:
         self.default = default
     def get(object: object):
         return object
+    def to_dict(self):
+        return {
+            "attr": self.attr,
+            "typ": self.typ.__name__ if self.typ is not None else None,
+            "validate": self.validate.__name__ if self.validate is not None else None,
+            "default": self.default,
+        }
 
+class InAttribute:
 
+    def __init__(self, attr: str, options: List[Attribute], default: bool = False, validateAll: bool = True, getter: Callable[[], Any] = None):
+        self.attr = attr
+        if getter is not None:
+            self.get = getter
+        self.default = default
+        self.options = options
+
+    def default(self) -> dict:
+        return {option.attr: option.default for option in self.options}
+    def to_dict(self):
+        return {
+            "attr": self.attr,
+            "options": [option.to_dict() for option in self.options],
+            "default": self.default,
+        }
 class Option:
     """_summary_
     In the Option class, optionID is a unique identifier for the option, while optionName is the name of the option. The optionID is used to differentiate between different options, while the optionName is used to identify the option in the settings data.
@@ -82,13 +105,20 @@ class Option:
             raise SystemExit("No optionID!")
         self.optionID = optionID
 
-    def append(self, attribute: Attribute):
+    def append(self, attribute: Attribute | InAttribute):
         if self.default is None:
             self.default = attribute
         if attribute.default:
             self.default = attribute
         self.attributes.append(attribute)
-
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "optionName": self.optionName,
+            "optionID": self.optionID,
+            "attributes": [attr.to_dict() for attr in self.attributes],
+            "default": self.default.to_dict() if self.default is not None else None,
+        }
 
 formats = [handle(".json", file.JSON)]
 
@@ -99,19 +129,36 @@ def addFormatSupport(Handler: Handler):
 
 def showFileDefs():
     return file
-class InAttribute:
-
-    def __init__(self, attr: str, options: List[Attribute], default: bool = False, validateAll: bool = True, getter: Callable[[], Any] = None):
-        self.attr = attr
-        if getter is not None:
-            self.get = getter
-        self.default = default
-        self.options = options
-
-    def default(self) -> dict:
-        return {option.attr: option.default for option in self.options}
 
 class AppSettings(Mapping):
+    def to_dict(self, nested=False):
+        data = {}
+        for option in self.options:
+            value = self.dict[option.name]
+            for attr in option.attributes + option.inAttributes:
+                if isinstance(value[attr.attr], AppSettings):
+                    value[attr.attr] = value[attr.attr].to_dict(nested=True)
+                elif callable(value[attr.attr]):
+                    value[attr.attr] = value[attr.attr]()
+                elif isinstance(value[attr.attr], Mapping):
+                    value[attr.attr] = dict(value[attr.attr])
+            data[option.name] = value
+        if nested:
+            return data
+        else:
+            return AppSettings.preProcess(data)
+
+    @classmethod
+    def from_dict(cls, data):
+        options = []
+        for key in data:
+            # Generate a random UUID
+            random_uuid = uuid.uuid4()
+            random = Option(f"import_{random_uuid}", key, data[key])
+            random.append(Attribute("attr", type(data[key]), default=data[key]))
+            options.append(random)
+        return AppSettings(options)
+
     def __init__(self, options: List[Option]):
         self.options = options
         self.dict = dict()
@@ -149,7 +196,10 @@ class AppSettings(Mapping):
             if x.format == type:
                 if len(filename) == 0:
                     filename = f"settings{x.format}"
-                return x.load(filename, path)
+                result = x.load(filename, path)
+                for i, setting in enumerate(result):
+                    result[i] = AppSettings.from_dict(setting)
+                return result
         return False
 
     @staticmethod
@@ -159,7 +209,7 @@ class AppSettings(Mapping):
             if x.format == type:
                 if len(filename) == 0:
                     filename = f"settings{x.format}"
-                return x.save(data, filename=filename, path=path)
+                return x.save([option.to_dict() for option in data], filename=filename, path=path)
         return False
 
     def loadFile(self, *args, **kwargs):
@@ -169,10 +219,9 @@ class AppSettings(Mapping):
         return self.load(data)
 
     def saveFile(self, *args, **kwargs):
-        return AppSettings._saveFile(AppSettings.preProcess(self.dict), *args, **kwargs)
+        return AppSettings._saveFile(self.options, *args, **kwargs)
 
-    @staticmethod
-    def preProcess(data: dict):
+    def preProcess(self, data: dict):
         return list(data.values())
 
     def validateAll(self):
@@ -226,22 +275,37 @@ class AppSettings(Mapping):
                 return self.options[attr].get(value)
             else:
                 return self.defaults[attr].get(value)
+
         if attr is None:
             return getSettingClosure(self.defaults[name])
         try:
-            return getSettingClosure(self.dict[name][attr])
-        except:
-            try:
-                option = next((option for option in self.options if option.name == name), None)
-                if option is None:
-                    raise KeyError(f"Option {name} not found in settings")
-                return getSettingClosure(option.default.default)
-            except KeyError:
-                raise KeyError(f"Attribute {attr} not found in settings")
+            option = next((option for option in self.options if option.name == name), None)
+            if option is None:
+                raise KeyError(f"Option {name} not found in settings")
+
+            attr_get = getWithAttr(option.attributes + option.inAttributes, attr, "attr")
+            if attr_get is None:
+                raise KeyError(f"Attribute {attr} not found in {option.name}")
+
+            if isinstance(attr_get, InAttribute):
+                result = {}
+                for sub_attr in attr_get.options:
+                    sub_attr_get = getWithAttr(option.attributes + option.inAttributes, sub_attr.attr, "attr")
+                    if sub_attr_get is None:
+                        raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
+                    result[sub_attr.attr] = getSettingClosure(self.dict[name].get(sub_attr.attr, sub_attr.default))
+                return result
+            else:
+                return getSettingClosure(self.dict[name][attr])
+        except KeyError:
+            raise KeyError(f"Attribute {attr} not found in settings")
 
     def getSettings(self):
         return self.dict
-
+    
+    def writeSetting(self, name: str, attr: str, value: Any):
+        self.dict[name][attr] = value
+        
     def getDefaultSettings(self):
         return self.defaults
 
