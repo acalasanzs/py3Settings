@@ -198,7 +198,16 @@ class AppSettings(Mapping):
     def getSetting(self, name: str, attr: str | None):
         if attr is None:
             return self.defaults[name]
-        return self.dict[name][attr]
+        try:
+            return self.dict[name][attr]
+        except:
+            try:
+                option = next((option for option in self.options if option.name == name), None)
+                if option is None:
+                    raise KeyError(f"Option {name} not found in settings")
+                return option.default.default
+            except KeyError:
+                raise KeyError(f"Attribute {attr} not found in settings")
 
     def getSettings(self):
         return self.dict
