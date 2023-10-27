@@ -1,0 +1,3 @@
+Add support for multiple validation methods, int, etc, lambda...self.dict
+optionID is redundant ok
+[false.false] Al guardar safeFile

@@ -20,3 +20,7 @@ def has_nested_object(obj):
     elif isinstance(obj, (list, tuple)):
         has_tuple(obj)
     return False
+def specialDict(name, value):
+    r = {}
+    r[name] = value
+    return r

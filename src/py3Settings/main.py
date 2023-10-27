@@ -17,7 +17,7 @@ class Attribute:
             attr2 = Attribute("attr2", str, lambda x: len(x) > 0, default="default_value")
 
             Create an option with the attributes
-            my_option = Option("my_option", optionID="option_id")
+            my_option = Option("my_option", "option_id")
             my_option.append(attr1)
             my_option.append(attr2)```
     
@@ -82,15 +82,12 @@ class Option:
     """
 
     def __init__(
-        self, name: str, optionName: str = "name", optionID: str | None = None
+        self, name: str, optionName: str = "name"
     ):
         self.name = name
         self.optionName = optionName
         self.attributes = []
         self.default = None
-        if optionID is None:
-            raise SystemExit("No optionID!")
-        self.optionID = optionID
 
     def append(self, attribute: Attribute | InAttribute):
         if self.default is None:
@@ -209,12 +206,12 @@ class AppSettings(Mapping):
             actual_name = option.name
             actual_optionName = option.optionName
             if type(option.default) is Attribute:
-                all.append(self.getSetting(actual_name, actual_optionName))
+                all.append(specialDict(actual_optionName, self.getSetting(actual_name, actual_optionName).default.default))
             else:
                 #getSetting must import InAttribute recursive                       ###################################################################
                 sub_actual = self.getSetting(actual_name, actual_optionName)
                 sub_preloaded = sub_actual.preload()
-                all.append(sub_preloaded)
+                all.append(specialDict(actual_optionName,sub_preloaded))
         return all
     def validateAll(self):
         i = 0
@@ -222,7 +219,6 @@ class AppSettings(Mapping):
             for option in self.options:
                 if (
                     option.optionName in value
-                    and value[option.optionName] == option.optionID
                 ):
                     for attr in [
                         y for y in list(value.keys()) if y != option.optionName
@@ -245,7 +241,6 @@ class AppSettings(Mapping):
             for option in self.options:
                 if (
                     option.optionName in statement
-                    and statement[option.optionName] == option.optionID
                 ):
                     for attr in [
                         y for y in list(statement.keys()) if y != option.optionName
@@ -262,11 +257,12 @@ class AppSettings(Mapping):
                     self.defaults[option.name] = statement[option.default.attr]
 
     def getSetting(self, name: str, attr: str | None):
-        def getSettingClosure(value):
-            if attr in self.options:
-                return self.options[attr].get(value)
+        def getSettingClosure():
+            value = getWithAttr(self.options, name, "name")
+            if value is not None:
+                return value
             else:
-                return self.defaults[attr].get(value)
+                return self.defaults[name][attr].get(self.defaults[attr])
 
         if attr is None:
             return getSettingClosure(self.defaults[name])
@@ -285,13 +281,13 @@ class AppSettings(Mapping):
                 sub_attr_get = getWithAttr(option.attributes + option.inAttributes, sub_attr.attr, "attr")
                 if sub_attr_get is None:
                     raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
-                result[sub_attr.attr] = getSettingClosure(self.dict[name].get(sub_attr.attr, sub_attr.default))
+                result[sub_attr.attr] = getSettingClosure()
             return result
         else:
-            try:
-                return getSettingClosure(self.dict[name][attr])
-            except KeyError:
-                return self.defaults[name].default
+            # try:
+                return getSettingClosure()
+            # except KeyError:
+            #     return self.defaults[name].default
         # except KeyError:
         #     raise KeyError(f"Attribute {attr} not found in settings")
 
@@ -299,7 +295,7 @@ class AppSettings(Mapping):
         return self.dict
     
     def writeSetting(self, name: str, attr: str, value: Any):
-        self.dict[name][attr] = value
+        self.dict[name]= specialDict(attr, value)
         
     def getDefaultSettings(self):
         return self.defaults
