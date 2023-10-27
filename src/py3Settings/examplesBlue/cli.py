@@ -1,31 +1,27 @@
 import json
+import sys
+import os
+sys.path.append(r'C:\Users\acses\Documents\py3Settings\src\py3Settings')
 from main import AppSettings, Option, Attribute
 
 # Define the structure of the settings
 options = [
-    Option("General", [
-        Attribute("name", str, "My App"),
-        Attribute("version", str, "1.0.0"),
+    Option("General", "general", [
+        Attribute("name", str, default = "My App"),
+        Attribute("version", str,default = "1.0.0"),
     ]),
-    Option("Appearance", [
-        Attribute("theme", str, "Light"),
-        Attribute("font_size", int, 12),
+    Option("Appearance", "appearance", [
+        Attribute("theme", str,default = "Light"),
+        Attribute("font_size", int,default = 12),
     ]),
 ]
 
 # Create an instance of the AppSettings class
 settings = AppSettings(options)
+print(settings)
+# Change the directory to the desired path
+os.chdir(r'C:\Users\acses\Documents\py3Settings\tmpf')
 
-# Load settings from a JSON file (if it exists)
-try:
-    with open(os.path.join(os.path.dirname(__file__), "../../settings.json"), "r") as f:
-        settings.load_json(f.read())
-except FileNotFoundError:
-    pass
-
-# Prompt the user to update the settings
-settings.update()
-
-# Save the settings to a JSON file
-with open(os.path.join(os.path.dirname(__file__), "../../settings.json"), "w") as f:
-    f.write(json.dumps(settings.to_dict(), indent=4))
+# Your code here
+settings.saveFile("default.json")
+# settings.loadFile("settings.json")

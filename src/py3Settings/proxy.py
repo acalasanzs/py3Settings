@@ -1,5 +1,5 @@
 from typing import Callable
-import re
+import re, os
 def handle(format, dict:dict):
     ins = Handler(format)
     ins.init(**dict)
@@ -19,6 +19,7 @@ class Handler:
         return wrapper
     @classmethod
     def fileStr(cls, file: str) -> bool:
+        file = os.path.basename(file)
         file = file.split(".")
         if(len(file) != 2):
             return False
