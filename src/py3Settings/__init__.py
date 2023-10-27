@@ -4,4 +4,4 @@
 #   -------------------------------------------------------------
 from .main import AppSettings, Option, Attribute, getWithAttr, addFormatSupport, showFileDefs, printObjProps
 # No hay recursividad
-__version__ = "2.1.0"
+__version__ = "3.0.0"

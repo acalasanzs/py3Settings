@@ -24,7 +24,7 @@ app_settings.validateAll()
 
 # Get the value of an attribute for an option
 attr1_value = app_settings.getSetting("my_option", "attr1")
-print(attr1_value.default)
+print(attr1_value)
 
 # Get all settings data
 settings_data = app_settings.getSettings()
