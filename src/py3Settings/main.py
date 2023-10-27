@@ -64,13 +64,6 @@ class Attribute:
         self.default = default
     def get(object: object):
         return object
-    def to_dict(self):
-        return {
-            "attr": self.attr,
-            "typ": self.typ.__name__ if self.typ is not None else None,
-            "validate": self.validate.__name__ if self.validate is not None else None,
-            "default": self.default,
-        }
 
 class InAttribute:
 
@@ -83,12 +76,6 @@ class InAttribute:
 
     def default(self) -> dict:
         return {option.attr: option.default for option in self.options}
-    def to_dict(self):
-        return {
-            "attr": self.attr,
-            "options": [option.to_dict() for option in self.options],
-            "default": self.default,
-        }
 class Option:
     """_summary_
     In the Option class, optionID is a unique identifier for the option, while optionName is the name of the option. The optionID is used to differentiate between different options, while the optionName is used to identify the option in the settings data.
@@ -111,14 +98,6 @@ class Option:
         if attribute.default:
             self.default = attribute
         self.attributes.append(attribute)
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "optionName": self.optionName,
-            "optionID": self.optionID,
-            "attributes": [attr.to_dict() for attr in self.attributes],
-            "default": self.default.to_dict() if self.default is not None else None,
-        }
 
 formats = [handle(".json", file.JSON)]
 
@@ -131,33 +110,40 @@ def showFileDefs():
     return file
 
 class AppSettings(Mapping):
+    """_copilot-suggerence_     
     def to_dict(self, nested=False):
-        data = {}
-        for option in self.options:
-            value = self.dict[option.name]
-            for attr in option.attributes + option.inAttributes:
-                if isinstance(value[attr.attr], AppSettings):
-                    value[attr.attr] = value[attr.attr].to_dict(nested=True)
-                elif callable(value[attr.attr]):
-                    value[attr.attr] = value[attr.attr]()
-                elif isinstance(value[attr.attr], Mapping):
-                    value[attr.attr] = dict(value[attr.attr])
-            data[option.name] = value
-        if nested:
-            return data
-        else:
-            return AppSettings.preProcess(data)
+            data = {}
+            for option in self.options:
+                value = self.dict[option.name]
+                for attr in option.attributes + option.inAttributes:
+                    if isinstance(value[attr.attr], AppSettings):
+                        value[attr.attr] = value[attr.attr].to_dict(nested=True)
+                    elif callable(value[attr.attr]):
+                        value[attr.attr] = value[attr.attr]()
+                    elif isinstance(value[attr.attr], Mapping):
+                        value[attr.attr] = dict(value[attr.attr])
+                data[option.name] = value
+            if nested:
+                return data
+            else:
+                return AppSettings.preProcess(data)
 
-    @classmethod
-    def from_dict(cls, data):
-        options = []
-        for key in data:
-            # Generate a random UUID
-            random_uuid = uuid.uuid4()
-            random = Option(f"import_{random_uuid}", key, data[key])
-            random.append(Attribute("attr", type(data[key]), default=data[key]))
-            options.append(random)
-        return AppSettings(options)
+        @classmethod
+        def from_dict(cls, data):
+            options = []
+            for key in data:
+                # Generate a random UUID
+                random_uuid = uuid.uuid4()
+                random = Option(f"import_{random_uuid}", key, data[key])
+                if has_nested_object(data[key]):
+                    for sub_key in data[key]:
+                        if isinstance(data[key][sub_key], dict):
+                            random.append(InAttribute(sub_key, [Attribute("attr", type(data[key][sub_key][sub_sub_key]), default=data[key][sub_key][sub_sub_key]) for sub_sub_key in data[key][sub_key]]))
+                        else:
+                            random.append(Attribute(sub_key, type(data[key][sub_key]), default=data[key][sub_key]))
+                options.append(random)
+            return AppSettings(options) 
+    """
 
     def __init__(self, options: List[Option]):
         self.options = options
@@ -196,10 +182,7 @@ class AppSettings(Mapping):
             if x.format == type:
                 if len(filename) == 0:
                     filename = f"settings{x.format}"
-                result = x.load(filename, path)
-                for i, setting in enumerate(result):
-                    result[i] = AppSettings.from_dict(setting)
-                return result
+                return x.load(filename, path)
         return False
 
     @staticmethod
@@ -209,7 +192,7 @@ class AppSettings(Mapping):
             if x.format == type:
                 if len(filename) == 0:
                     filename = f"settings{x.format}"
-                return x.save([option.to_dict() for option in data], filename=filename, path=path)
+                return x.save(data, filename=filename, path=path)
         return False
 
     def loadFile(self, *args, **kwargs):
@@ -219,10 +202,7 @@ class AppSettings(Mapping):
         return self.load(data)
 
     def saveFile(self, *args, **kwargs):
-        return AppSettings._saveFile(self.options, *args, **kwargs)
-
-    def preProcess(self, data: dict):
-        return list(data.values())
+        return AppSettings._saveFile(self.dict, *args, **kwargs)
 
     def validateAll(self):
         i = 0

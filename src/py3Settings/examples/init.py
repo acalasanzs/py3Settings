@@ -5,5 +5,5 @@ print(tests)
 import sys, os
 sys.path.append(r'C:\Users\acses\Documents\py3Settings\src\py3Settings')
 # from main import AppSettings, Option, Attribute
-from py3Settings import AppSettings, Option, Attribute
+from main import AppSettings, Option, Attribute
 from typing import List
