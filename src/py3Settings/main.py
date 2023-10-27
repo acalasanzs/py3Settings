@@ -67,15 +67,13 @@ class Attribute:
 
 class InAttribute:
 
-    def __init__(self, attr: str, options: List[Attribute], default: bool = False, validateAll: bool = True, getter: Callable[[], Any] = None):
+    def __init__(self, attr: str, options: List[Attribute], validateAll: bool = True):
         self.attr = attr
-        if getter is not None:
-            self.get = getter
-        self.default = default
-        self.options = options
-
-    def default(self) -> dict:
-        return {option.attr: option.default for option in self.options}
+        self.validateAll = validateAll
+        option = Option("sub_"+attr, attr)
+        for x in options:
+            option.append(x)
+        self.options = AppSettings([option])
 class Option:
     """_summary_
     In the Option class, optionID is a unique identifier for the option, while optionName is the name of the option. The optionID is used to differentiate between different options, while the optionName is used to identify the option in the settings data.
@@ -92,7 +90,7 @@ class Option:
     def append(self, attribute: Attribute | InAttribute):
         if self.default is None:
             self.default = attribute
-        if attribute.default:
+        if type(attribute) is Attribute and attribute.default:
             self.default = attribute
         self.attributes.append(attribute)
 
@@ -209,9 +207,11 @@ class AppSettings(Mapping):
                 all.append(specialDict(actual_optionName, self.getSetting(actual_name, actual_optionName).default.default))
             else:
                 #getSetting must import InAttribute recursive                       ###################################################################
-                sub_actual = self.getSetting(actual_name, actual_optionName)
-                sub_preloaded = sub_actual.preload()
-                all.append(specialDict(actual_optionName,sub_preloaded))
+                for sub_preload in option.default.options:
+                    if type(sub_preload) is Attribute:
+                        continue
+                    sub_preloaded = sub_preload.preload()
+                    all.append(specialDict(actual_optionName,sub_preloaded))
         return all
     def validateAll(self):
         i = 0
@@ -278,7 +278,7 @@ class AppSettings(Mapping):
         if isinstance(attr_get, InAttribute):
             result = {}
             for sub_attr in attr_get.options:
-                sub_attr_get = getWithAttr(option.attributes + option.inAttributes, sub_attr.attr, "attr")
+                sub_attr_get = getWithAttr(option.attributes, sub_attr.attr, "attr")
                 if sub_attr_get is None:
                     raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
                 result[sub_attr.attr] = getSettingClosure()
