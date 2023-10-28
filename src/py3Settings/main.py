@@ -145,7 +145,7 @@ class AppSettings(Mapping):
             actual_name = option.name
             actual_optionName = option.optionName
             if type(option.default) is Attribute:
-                all.append(specialDict(actual_optionName, self.getSetting(actual_name, actual_optionName).default.default))
+                all.append(specialDict(option.default.attr, self.getSetting(actual_name, actual_optionName)))
             else:
                 #getSetting must import InAttribute recursive                       ###################################################################
                 for sub_preload in option.default.options:
