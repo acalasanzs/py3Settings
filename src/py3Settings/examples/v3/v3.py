@@ -10,7 +10,7 @@ from typing import List
 # Example usage
 attr1 = Attribute("attr1", lambda x: x > 0, default=1)
 attr2 = Attribute("attr2", lambda x: len(x) > 0, default="default_value")
-inAttr = InAttribute("inAttr", [attr1, attr2])
+inAttr = InAttribute("inAttr", [Option("sub_option",None, [attr1, attr2])])
 my_option = Option("my_option", "option_id")
 my_option.append(attr1)
 my_option.append(inAttr)
