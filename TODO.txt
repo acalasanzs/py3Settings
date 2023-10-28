@@ -1,4 +1,4 @@
 Add support for multiple validation methods, int, etc, lambda...self.dict
 optionID is redundant ok
 [false.false] Al guardar safeFile
-Me ha mentido, que habiamos dicho del AppSettings nested en InAttribute?
+Me ha mentido, que habiamos dicho del AppSettings nested en InAttribute? Además tiene que tener alguna incorporación en dict o en defaults los InAttribute

@@ -17,11 +17,11 @@ my_option.append(inAttr)
 
 my_settings = AppSettings([my_option])
 
-# Set values for attributes
+# Set values for attributes.
 my_settings.writeSetting("my_option", "attr1", 2)
 my_settings.writeSetting("my_option", "attr2", "new_value")
 
-# Validate all attributes
+# Validate all attributes: IF ANY FAILS, IT WILL RAISE AN ERROR.
 my_settings.validateAll()
 
 # Get value of attribute

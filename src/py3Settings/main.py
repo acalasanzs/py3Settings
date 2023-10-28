@@ -93,6 +93,7 @@ class Option:
         if type(attribute) is Attribute and attribute.default:
             self.default = attribute
         self.attributes.append(attribute)
+        return
 
 formats = [handle(".json", file.JSON)]
 
@@ -255,15 +256,26 @@ class AppSettings(Mapping):
                             statement[attr] = val()
                     self.dict[option.name] = statement
                     self.defaults[option.name] = statement[option.default.attr]
+                    if type(option.default) is InAttribute:
+                        self.defaults[option.name] = option.default
 
     def getSetting(self, name: str, attr: str | None):
         def getSettingClosure():
             value = getWithAttr(self.options, name, "name")
             if value is not None:
-                return value
+                try:
+                    return self.dict[value.name][attr]
+                except KeyError:
+                    self.defaults[option.name] = option.default
+                    return value.default.default
             else:
                 return self.defaults[name][attr].get(self.defaults[attr])
-
+        def getAppClosure():
+            value = getWithAttr(self.options, name, "name")
+            if value is not None:
+                return getWithAttr(value.attributes, attr, "attr").options
+            else:
+                return self.defaults[name][attr].get(self.defaults[attr])
         if attr is None:
             return getSettingClosure(self.defaults[name])
         # try:
@@ -276,18 +288,9 @@ class AppSettings(Mapping):
             raise KeyError(f"Attribute {attr} not found in {option.name}")
 
         if isinstance(attr_get, InAttribute):
-            result = {}
-            for sub_attr in attr_get.options:
-                sub_attr_get = getWithAttr(option.attributes, sub_attr.attr, "attr")
-                if sub_attr_get is None:
-                    raise KeyError(f"Attribute {sub_attr.attr} not found in {option.name}")
-                result[sub_attr.attr] = getSettingClosure()
-            return result
+            return getAppClosure()
         else:
-            # try:
-                return getSettingClosure()
-            # except KeyError:
-            #     return self.defaults[name].default
+            return getSettingClosure()
         # except KeyError:
         #     raise KeyError(f"Attribute {attr} not found in settings")
 
@@ -295,7 +298,10 @@ class AppSettings(Mapping):
         return self.dict
     
     def writeSetting(self, name: str, attr: str, value: Any):
-        self.dict[name]= specialDict(attr, value)
+        if self.dict.get(name) is None:
+            self.dict[name] = specialDict(attr, value)
+            return
+        self.dict[name][attr] = value
         
     def getDefaultSettings(self):
         return self.defaults
