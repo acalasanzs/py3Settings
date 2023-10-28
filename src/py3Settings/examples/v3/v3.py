@@ -29,4 +29,10 @@ print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 
 # Get values of InAttribute object
 print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
+"""reality:
+    options : [<main.Option object at 0x00000275346F9640>]
+    dict : {}
+    defaults : {}
+    i : 0
+"""
 my_settings.saveFile(r"C:\Users\acses\Documents\py3Settings\tests\algov3.json", tests)
