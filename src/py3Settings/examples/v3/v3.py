@@ -17,8 +17,10 @@ my_option.append(inAttr)
 
 my_settings = AppSettings([my_option])
 all = my_settings
-print(all)
+my_settings.validateAll()
 # Set values for attributes.
+print(all)
+
 my_settings.writeSetting("my_option", "attr1", 2)
 my_settings.writeSetting("my_option", "attr2", "new_value")
 

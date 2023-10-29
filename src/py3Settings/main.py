@@ -155,26 +155,30 @@ class AppSettings(Mapping):
                     all.append(specialDict(actual_optionName,sub_preloaded))
         return all
     def validateAll(self):
-        i = 0
-        for key, value in self.dict.items():
-            for option in self.options:
-                if (
-                    option.optionName in value
-                ):
-                    for attr in [
-                        y for y in list(value.keys()) if y != option.optionName
-                    ]:
-                        attr_get = getWithAttr(option.attributes, attr, "attr")
+        for option in self.options:
+            value = self.dict.get(option.name, {})
+            for attr in [x.attr for x in option.attributes]:
+                if attr not in value:
+                    value[attr] = option.default.default
+                else:
+                    attr_get = getWithAttr(option.attributes, attr, "attr")
+                    if type(attr_get) is InAttribute:
+                        if attr_get.validateAll:
+                            attr_get.options.validateAll()
+                    else:
                         val = attr_get.validate(value[attr])
-                        if attr in [x.attr for x in option.attributes] and not val:
+                        if not val:
                             raise SystemExit(
-                                f"Value ({value[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}"
+                                f"Value ({value[attr]}) Validation Failure for {attr_get.attr} of {option.name}"
                             )
                         if callable(val):
                             value[attr] = val()
-                    self.dict[option.name] = value                                             #  Where the dict or defaults changes                  ###################################################################
-                    self.defaults[option.name] = value[option.default.attr]
-            i += 1
+            if type(option.default) is InAttribute:
+                self.dict[option.name] = str(attr_get.options)
+                self.defaults[option.name] = str(attr_get.options)
+            else:
+                self.dict[option.name] = value
+                self.defaults[option.name] = value[option.default.attr]
 
     def load(self, data: list):
         assert isinstance(data, list)
