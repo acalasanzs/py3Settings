@@ -40,8 +40,8 @@ class Attribute:
         attr: str,
         typ: type | None = None,
         validate: Callable[[object], bool] | None = None,
-        default: bool = False,
-        getter: Callable[[object], object] = None,
+        default: any = False,
+        getter: Callable[[any], any] = None,
     ):
         self.attr = attr
         if typ is None and validate is Callable[[object], bool]:

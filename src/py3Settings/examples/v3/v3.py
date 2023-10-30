@@ -17,21 +17,21 @@ my_option.append(inAttr)
 
 my_settings = AppSettings([my_option])
 all = my_settings
-my_settings.validateAll()
+# my_settings.validateAll()
 # Set values for attributes.
 print(all)
 
 my_settings.writeSetting("my_option", "attr1", 2)
-my_settings.writeSetting("my_option", "attr2", "new_value")
+# my_settings.writeSetting("my_option", "attr2", "new_value")
 
 # Validate all attributes: IF ANY FAILS, IT WILL RAISE AN ERROR.
+print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 my_settings.validateAll()
 
 # Get value of attribute
-print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 
 # Get values of InAttribute object
-sub_app = my_settings.getSetting("my_option", "inAttr")
+sub_app = my_settings.getSetting("my_option", "attr2")
 print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
     options : [<main.Option object at 0x00000275346F9640>]

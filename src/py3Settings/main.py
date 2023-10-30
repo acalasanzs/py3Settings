@@ -155,31 +155,47 @@ class AppSettings(Mapping):
                     all.append(specialDict(actual_optionName,sub_preloaded))
         return all
     def validateAll(self):
-        for option in self.options:
-            value = self.dict.get(option.name, {})
-            for attr in [x.attr for x in option.attributes]:
-                if attr not in value:
-                    value[attr] = option.default.default
-                else:
-                    attr_get = getWithAttr(option.attributes, attr, "attr")
-                    if type(attr_get) is InAttribute:
-                        if attr_get.validateAll:
-                            attr_get.options.validateAll()
-                    else:
-                        val = attr_get.validate(value[attr])
-                        if not val:
-                            raise SystemExit(
-                                f"Value ({value[attr]}) Validation Failure for {attr_get.attr} of {option.name}"
-                            )
-                        if callable(val):
-                            value[attr] = val()
-            if type(option.default) is InAttribute:
-                self.dict[option.name] = str(attr_get.options)
-                self.defaults[option.name] = str(attr_get.options)
-            else:
-                self.dict[option.name] = value
-                self.defaults[option.name] = value[option.default.attr]
+        i = 0
+        def searchMatch(option):
+            """_summary_
+                This sub function searches all over self.dict and self.defaults so it can get the direct match about that option, so it can be retrieved for validating it to the current attribute.
+            Args:
+                option (Option): The option is going to be used as the match indicator
+                
+            """
+            def retrieve(where):
+                for key in where.keys():
+                    if key == option.name:
+                        attrs = where[key].keys()
+                        return {
+                            "native": [getWithAttr(option.attributes, x, "attr") for x in attrs],
+                            "plain": where[key]
+                        }
+            sdict = retrieve(self.dict)
+            if sdict is not None:
+                for sd in sdict['native']:
+                    sd.validate(sdict['plain'][sd.attr])
+                if len(option.attributes) > len(sdict['plain']):
+                    new = []
+                    for x in option.attributes:
+                        if type(x) is InAttribute:
+                            new.append(x)
+                    return new
+            return False
+            
+            
 
+        # Only validates the ones that are neither default or undefined, which is only self.dict
+        for key, value in self.dict.items():
+            # For all the options that meet the above requirements
+            for option in self.options:
+                
+                option_class = searchMatch(option)
+                if option_class:
+                    for app in option_class:
+                        app.options.validateAll()
+                    
+            i += 1
     def load(self, data: list):
         assert isinstance(data, list)
         for i, statement in enumerate(data):
@@ -210,7 +226,7 @@ class AppSettings(Mapping):
                 try:
                     return self.dict[value.name][attr]
                 except KeyError:
-                    self.defaults[option.name] = option.default
+                    self.defaults[option.name] = option.default.default
                     return value.default.default
             else:
                 return self.defaults[name][attr].get(self.defaults[attr])

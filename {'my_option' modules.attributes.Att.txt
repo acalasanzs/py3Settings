@@ -1,0 +1,2 @@
+{'my_option': <modules.attributes.Attribute object at 0x00000153FBEDA7B0>} DONE
+Como se puede saber si está o no en dict para validar?
