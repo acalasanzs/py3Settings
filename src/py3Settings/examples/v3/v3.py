@@ -31,7 +31,7 @@ my_settings.validateAll()
 # Get value of attribute
 
 # Get values of InAttribute object
-sub_app = my_settings.getSetting("my_option", "attr2")
+sub_app = my_settings.getSetting("my_option", "inAttr")
 print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
     options : [<main.Option object at 0x00000275346F9640>]
