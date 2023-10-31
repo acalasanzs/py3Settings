@@ -269,17 +269,24 @@ class AppSettings(Mapping):
     def pushSetting(self, name: str, attr: str):
         self.validateAll()
         value = [x for x in getWithAttr(self.options, name, "name").attributes if x.attr == attr]
-        try:
-            self.dict[name].pop(value.attr, None)
-        except:
-            self.defaults[name].pop(value.attr, None)
         if len(value) == 0:
             return
         value = value[0]
+        try:
+            self.dict.pop(name, None)
+            self.defaults.pop(name, None)
+        except:
+            self.defaults.pop(name, None)
         if type(value) is InAttribute:
-            self.defaults[value.attr] = value.options
+            if self.defaults.get(name) is None:
+                self.defaults[name] = specialDict(value.attr, value.options)
+            else:
+                self.defaults[name][value.attr] = value.options
         elif type(value) is Attribute:
-            self.defaults[value.attr] = value.default
+            if self.defaults.get(name) is None:
+                self.defaults[name] = specialDict(value.attr, value.default)
+            else:
+                self.defaults[name][value.attr] = value.default
     def getDefaultSettings(self):
         return self.defaults
 
