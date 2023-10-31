@@ -43,6 +43,12 @@ def addFormatSupport(Handler: Handler):
 
 def showFileDefs():
     return file
+def ROption(name: str, typ: type | None = None,
+        default: any = False,
+        validate: Callable[[any], any] = None):
+    return Option(name, [Attribute(name, typ, default, validate)])
+def RIOption(name: str, options: List[Option], validateAll: bool = True):
+    return Option(name, [InAttribute(name, options, validateAll)])
 
 class AppSettings(Mapping):
     """_copilot-suggerence_     
@@ -140,6 +146,7 @@ class AppSettings(Mapping):
     def saveFile(self, *args, **kwargs):
         return AppSettings._saveFile(self.preload(), *args, **kwargs)
     def preload(self):
+        self.getSettings()
         all = []
         for option in self.options:
             written = self.retrieve(option, self.dict)
@@ -152,14 +159,17 @@ class AppSettings(Mapping):
                 try:
                     for key, value in written.items():
                         if type(value) is AppSettings:
-                            written[key] = value.preload()[0]
+                            vals = value.preload()
+                            written[key] = {}
+                            for d in vals:
+                                written[key][next(iter(d.keys()))] = next(iter(d.values()))
                     all.append(written)
                 except:
                     # if isinstance(written, dict):
                     #     all.append(written[option.default.attr])
                     # else:
                     all.append(specialDict(option.default.attr, written))
-            if actual is not None:
+            elif actual is not None:
                 all.append(actual)
         return all
     def retrieve(self, option, where):
