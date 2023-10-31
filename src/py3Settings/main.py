@@ -273,14 +273,17 @@ class AppSettings(Mapping):
         for option in self.options:
             sdict = self.retrieve(option, self.dict)
             sdef = self.retrieve(option, self.defaults)
-            if sdict['native'] is not None:
+            if sdict is not None:
                 all['native'].append(sdict['native'])
-            else:
-                all['native'].append(sdef['native'])
-            if sdict['plain'] is not None:
                 all['plain'].append(sdict['plain'])
-            else:
+            elif sdef is not None:
+                all['native'].append(sdef['native'])
                 all['plain'].append(sdef['plain'])
+            else:
+                for x in self.options:
+                    attr = x.default
+                    self.pushSetting(x.name, attr.attr)
+                return self.getSettings()
         return all
     
     def writeSetting(self, name: str, attr: str, value: Any):

@@ -43,13 +43,15 @@ class Attribute:
         validate: Callable[[any], any] = None
     ):
         self.attr = attr
-        if typ is not None and validate is None:
+        if typ is None and validate is not None:
             self.typ = typ
             if validate is not None:
                 self.get = validate
             self.validate = (
                 lambda a: isinstance(a, typ) if validate is None else self.get(a)
             )
+        elif typ is not None:
+            self.typ = typ
         else:
             raise SystemExit("No type!")
         self.default = default
