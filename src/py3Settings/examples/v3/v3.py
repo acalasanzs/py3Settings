@@ -23,11 +23,10 @@ all = my_settings
 print(all)
 
 # my_settings.writeSetting("my_option", "attr1", 2)
-# my_settings.writeSetting("my_option", "attr2", "new_value")
+my_settings.writeSetting("my_option", "attr2", "new_value")
 
 # Validate all attributes: IF ANY FAILS, IT WILL RAISE AN ERROR.
 print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
-my_settings.validateAll()
 
 # Get value of attribute
 
@@ -37,6 +36,7 @@ my_settings.validateAll()
 sub_app = my_settings.getSetting("my_option", "inAttr")
 sub_app.writeSetting("sub_option", "attr1", "Albert")
 all.pushSetting("my_option", "inAttr")
+print("pass 2")
 # print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
     options : [<main.Option object at 0x00000275346F9640>]
@@ -45,3 +45,4 @@ all.pushSetting("my_option", "inAttr")
     i : 0
 """
 my_settings.saveFile(r"C:\Users\acses\Documents\py3Settings\tests\algov3.json", tests)
+print("ok")

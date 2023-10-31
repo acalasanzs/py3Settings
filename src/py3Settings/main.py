@@ -168,13 +168,17 @@ class AppSettings(Mapping):
                     if key == option.name:
                         attrs = where[key].keys()
                         return {
-                            "native": [getWithAttr(option.attributes, x, "attr") for x in attrs],
+                            "native": option.attributes,
                             "plain": where[key]
                         }
             sdict = retrieve(self.dict)
             if sdict is not None:
-                for sd in sdict['native']:
-                    sd.validate(sdict['plain'][sd.attr])
+                for sd in sdict['plain']:
+                    attr = getWithAttr(sdict['native'], sd, "attr")
+                    if type(attr) is Attribute:
+                        attr.validate(sdict['plain'][sd])
+                    elif type(attr) is InAttribute:
+                        attr.options.validateAll()
                 if len(option.attributes) > len(sdict['plain']):
                     new = []
                     for x in option.attributes:
@@ -226,7 +230,7 @@ class AppSettings(Mapping):
                 try:
                     return self.dict[value.name][attr]
                 except KeyError:
-                    self.defaults[option.name] = option.default.default
+                    self.defaults[option.name] = specialDict(option.default.attr, option.default.default)
                     return value.default.default
             else:
                 return self.defaults[name][attr].get(self.defaults[attr])
@@ -263,16 +267,19 @@ class AppSettings(Mapping):
             return
         self.dict[name][attr] = value
     def pushSetting(self, name: str, attr: str):
-        self.dict.pop(name, None)
-        self.defaults.pop(name, None)
+        self.validateAll()
         value = [x for x in getWithAttr(self.options, name, "name").attributes if x.attr == attr]
+        try:
+            self.dict[name].pop(value.attr, None)
+        except:
+            self.defaults[name].pop(value.attr, None)
         if len(value) == 0:
             return
         value = value[0]
         if type(value) is InAttribute:
-            self.defaults[name] = value.options
+            self.defaults[value.attr] = value.options
         elif type(value) is Attribute:
-            self.defaults[name] = value.default
+            self.defaults[value.attr] = value.default
     def getDefaultSettings(self):
         return self.defaults
 

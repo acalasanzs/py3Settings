@@ -51,3 +51,8 @@ def specialDict(name, value):
     r = {}
     r[name] = value
     return r
+def to_objectKeys(list: list):
+    new = dict()
+    for x in list:
+        new[next(iter(x.keys()))] = next(iter(x.values()))
+    return new
