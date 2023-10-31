@@ -39,22 +39,19 @@ class Attribute:
         self,
         attr: str,
         typ: type | None = None,
-        validate: Callable[[object], bool] | None = None,
         default: any = False,
-        getter: Callable[[any], any] = None
+        validate: Callable[[any], any] = None
     ):
         self.attr = attr
-        if typ is None and validate is Callable[[object], bool]:
-            self.validate = validate
-        elif validate is None and typ is not None:
+        if typ is None and validate is not None:
             self.typ = typ
+            if validate is not None:
+                self.get = validate
             self.validate = (
-                lambda a: isinstance(a, typ) if not hasattr(self, "get") else self.get
+                lambda a: isinstance(a, typ) if validate is None else self.get(a)
             )
-            if getter is not None:
-                self.get = getter
         else:
             raise SystemExit("No type!")
         self.default = default
-    def get(object: object):
+    def get(self, object: object):
         return object

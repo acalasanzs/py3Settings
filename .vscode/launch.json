@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "v3",
+            "name": "v3Load",
             "type": "python",
             "request": "launch",
-            "program": "src/py3Settings/examples/v3/v3.py",
+            "program": "src/py3Settings/examples/v3/v3Load.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

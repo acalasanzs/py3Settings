@@ -150,10 +150,16 @@ class AppSettings(Mapping):
             if actual is not None:
                 actual = actual['plain']
             if written is not None:
-                for key, value in written.items():
-                    if type(value) is AppSettings:
-                        written[key] = value.preload()[0]
-                all.append(written)
+                try:
+                    for key, value in written.items():
+                        if type(value) is AppSettings:
+                            written[key] = value.preload()[0]
+                    all.append(written)
+                except:
+                    # if isinstance(written, dict):
+                    #     all.append(written[option.default.attr])
+                    # else:
+                    all.append(specialDict(option.default.attr, written))
             if self.putAll and actual is not None:
                 all.append(actual)
         return all
@@ -166,7 +172,6 @@ class AppSettings(Mapping):
         """
         for key in where.keys():
             if key == option.name:
-                attrs = where[key].keys()
                 return {
                     "native": option.attributes,
                     "plain": where[key]
@@ -208,23 +213,22 @@ class AppSettings(Mapping):
         for i, statement in enumerate(data):
             for option in self.options:
                 if (
-                    option.optionName in statement
+                    option.default.attr in statement
                 ):
-                    for attr in [
-                        y for y in list(statement.keys()) if y != option.optionName
-                    ]:
+                    for attr in statement.keys():
                         attr_get = getWithAttr(option.attributes, attr, "attr")
-                        val = attr_get.validate(statement[attr])
-                        if attr in [x.attr for x in option.attributes] and not val:
-                            raise SystemExit(
-                                f"Value ({statement[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}"
-                            )
-                        if callable(val):
-                            statement[attr] = val()
-                    self.dict[option.name] = statement                                             #  Where the dict or defaults changes                  ###################################################################
+                        if type(attr_get) is InAttribute:
+                            attr_get.options.load(list(statement[attr_get.attr]))
+                            attr_get.options.validateAll()
+                            self.dict[option.name] = statement
+                        else:
+                            val = attr_get.validate(18)
+                            if attr in [x.attr for x in option.attributes] and not val:
+                                raise SystemExit(
+                                    f"Value ({statement[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}"
+                                )
+                            self.dict[option.name] = statement[attr]                                          #  Where the dict or defaults changes                  ###################################################################
                     self.defaults[option.name] = statement[option.default.attr]
-                    if type(option.default) is InAttribute:
-                        self.defaults[option.name] = option.default
 
     def getSetting(self, name: str, attr: str | None):
         def getSettingClosure():
