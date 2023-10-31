@@ -1,11 +1,11 @@
 import os
 from typing import Any, Callable, Iterator, List
-import file
-from proxy import *
-from utils import *
+from . import file
+from .proxy import *
+from .utils import *
 from collections.abc import Mapping
 import uuid
-from modules import *
+from .modules import *
 # from packages.AppSettings.utils import staticinstance
 class Option:
     """_summary_
