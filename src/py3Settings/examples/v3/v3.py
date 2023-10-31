@@ -1,4 +1,5 @@
 from setdir import get_path, get
+from copy import deepcopy as dc
 tests = get("child","tests", 1)
 # tests = get_path("tests")
 print(tests)
@@ -7,10 +8,10 @@ sys.path.append(r'C:\Users\acses\Documents\py3Settings\src\py3Settings')
 # from main import AppSettings, Option, Attribute
 from main import InAttribute, AppSettings, Option, Attribute
 from typing import List
-# Example usage
+# Example usage3
 attr1 = Attribute("attr1", lambda x: x > 0, default=1)
 attr2 = Attribute("attr2", lambda x: len(x) > 0, default="default_value")
-inAttr = InAttribute("inAttr", [Option("sub_option",None, [attr1, attr2])])
+inAttr = InAttribute("inAttr", [Option("sub_option",None, dc([attr1, attr2]))])
 my_option = Option("my_option", "option_id")
 my_option.append(attr1)
 my_option.append(inAttr)
@@ -21,7 +22,7 @@ all = my_settings
 # Set values for attributes.
 print(all)
 
-my_settings.writeSetting("my_option", "attr1", 2)
+# my_settings.writeSetting("my_option", "attr1", 2)
 # my_settings.writeSetting("my_option", "attr2", "new_value")
 
 # Validate all attributes: IF ANY FAILS, IT WILL RAISE AN ERROR.
@@ -31,8 +32,12 @@ my_settings.validateAll()
 # Get value of attribute
 
 # Get values of InAttribute object
+
+#Instead, write from origin to replace default
 sub_app = my_settings.getSetting("my_option", "inAttr")
-print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
+sub_app.writeSetting("sub_option", "attr1", "Albert")
+all.pushSetting("my_option", "inAttr")
+# print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
     options : [<main.Option object at 0x00000275346F9640>]
     dict : {}

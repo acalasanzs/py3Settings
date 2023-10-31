@@ -262,7 +262,17 @@ class AppSettings(Mapping):
             self.dict[name] = specialDict(attr, value)
             return
         self.dict[name][attr] = value
-        
+    def pushSetting(self, name: str, attr: str):
+        self.dict.pop(name, None)
+        self.defaults.pop(name, None)
+        value = [x for x in getWithAttr(self.options, name, "name").attributes if x.attr == attr]
+        if len(value) == 0:
+            return
+        value = value[0]
+        if type(value) is InAttribute:
+            self.defaults[name] = value.options
+        elif type(value) is Attribute:
+            self.defaults[name] = value.default
     def getDefaultSettings(self):
         return self.defaults
 

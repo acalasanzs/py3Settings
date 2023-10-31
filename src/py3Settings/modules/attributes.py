@@ -41,7 +41,7 @@ class Attribute:
         typ: type | None = None,
         validate: Callable[[object], bool] | None = None,
         default: any = False,
-        getter: Callable[[any], any] = None,
+        getter: Callable[[any], any] = None
     ):
         self.attr = attr
         if typ is None and validate is Callable[[object], bool]:
