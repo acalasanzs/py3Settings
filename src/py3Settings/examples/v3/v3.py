@@ -13,10 +13,11 @@ attr1 = Attribute("attr1", lambda x: x > 0, default=1)
 attr2 = Attribute("attr2", lambda x: len(x) > 0, default="default_value")
 inAttr = InAttribute("inAttr", [Option("sub_option",None, dc([attr1, attr2]))])
 my_option = Option("my_option", "option_id")
+my_second_option = Option("another", "whatItTalksInside")
 my_option.append(attr1)
-my_option.append(inAttr)
+my_second_option.append(inAttr)
 
-my_settings = AppSettings([my_option])
+my_settings = AppSettings([my_option, my_second_option])
 all = my_settings
 # my_settings.validateAll()
 # Set values for attributes.
@@ -33,9 +34,10 @@ print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 # Get values of InAttribute object
 
 #Instead, write from origin to replace default
-sub_app = my_settings.getSetting("my_option", "inAttr")
+sub_app = my_settings.getSetting("another", "inAttr")
 sub_app.writeSetting("sub_option", "attr1", "Albert")
-# all.pushSetting("my_option", "inAttr")
+all.pushSetting("another", "inAttr")
+all.putAll = True
 print("pass 2")
 # print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:

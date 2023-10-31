@@ -86,6 +86,7 @@ class AppSettings(Mapping):
         self.dict = dict()
         self.defaults = dict()
         self.i = 0
+        self.putAll = False
 
     def __getitem__(self, __key: str | int) -> Option:
         for i, x in enumerate(self.options):
@@ -139,17 +140,22 @@ class AppSettings(Mapping):
 
     def saveFile(self, *args, **kwargs):
         return AppSettings._saveFile(self.preload(), *args, **kwargs)
-    def preload(self, putAll: bool = False):
+    def preload(self):
         all = []
         for option in self.options:
-            written = self.retrieve(option, self.dict)['plain']
+            written = self.retrieve(option, self.dict)
             actual = self.retrieve(option, self.defaults)
-            for key, value in written.items():
-                if type(value) is AppSettings:
-                    written[key] = value.preload()[0]
-            all.append(written)
-            if putAll:
-                pass
+            if written is not None:
+                written = written['plain']
+            if actual is not None:
+                actual = actual['plain']
+            if written is not None:
+                for key, value in written.items():
+                    if type(value) is AppSettings:
+                        written[key] = value.preload()[0]
+                all.append(written)
+            if self.putAll and actual is not None:
+                all.append(actual)
         return all
     def retrieve(self, option, where):
         """_summary_
