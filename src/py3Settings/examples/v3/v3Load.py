@@ -14,8 +14,8 @@ def setup():
     attr1 = Attribute("attr1", validate=lambda x: x > 0, default=1)
     attr2 = Attribute("attr2", validate=lambda x: len(x) > 0, default="default_value")
     inAttr = InAttribute("inAttr", [Option("sub_option",None, dc([attr1, attr2]))])
-    my_option = Option("my_option", "option_id")
-    my_second_option = Option("another", "whatItTalksInside")
+    my_option = Option("my_option")
+    my_second_option = Option("another")
     my_option.append(attr1)
     my_second_option.append(inAttr)
 
