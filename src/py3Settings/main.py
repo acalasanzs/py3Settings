@@ -13,10 +13,9 @@ class Option:
     """
 
     def __init__(
-        self, name: str, optionName: str = "name", attributes: ['Attribute | InAttribute'] = []
+        self, name: str, attributes: ['Attribute | InAttribute'] = []
     ):
         self.name = name
-        self.optionName = optionName
         self.attributes = []
         self.default = None
         for x in attributes:

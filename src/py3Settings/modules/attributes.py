@@ -43,7 +43,7 @@ class Attribute:
         validate: Callable[[any], any] = None
     ):
         self.attr = attr
-        if typ is None and validate is not None:
+        if typ is not None and validate is None:
             self.typ = typ
             if validate is not None:
                 self.get = validate
