@@ -86,7 +86,7 @@ class AppSettings(Mapping):
         self.dict = dict()
         self.defaults = dict()
         self.i = 0
-        self.putAll = False
+        # self.putAll = False
 
     def __getitem__(self, __key: str | int) -> Option:
         for i, x in enumerate(self.options):
@@ -160,7 +160,7 @@ class AppSettings(Mapping):
                     #     all.append(written[option.default.attr])
                     # else:
                     all.append(specialDict(option.default.attr, written))
-            if self.putAll and actual is not None:
+            if actual is not None:
                 all.append(actual)
         return all
     def retrieve(self, option, where):
@@ -222,7 +222,7 @@ class AppSettings(Mapping):
                             attr_get.options.validateAll()
                             self.dict[option.name] = statement
                         else:
-                            val = attr_get.validate(18)
+                            val = attr_get.validate(statement[attr])
                             if attr in [x.attr for x in option.attributes] and not val:
                                 raise SystemExit(
                                     f"Value ({statement[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}"
@@ -237,7 +237,8 @@ class AppSettings(Mapping):
                 try:
                     return self.dict[value.name][attr]
                 except KeyError:
-                    self.defaults[option.name] = specialDict(option.default.attr, option.default.default)
+                    if not self.dict.get(option.name):
+                        self.defaults[option.name] = specialDict(option.default.attr, option.default.default)
                     return value.default.default
             else:
                 return self.defaults[name][attr].get(self.defaults[attr])
@@ -286,8 +287,9 @@ class AppSettings(Mapping):
     def writeSetting(self, name: str, attr: str, value: Any):
         if self.dict.get(name) is None:
             self.dict[name] = specialDict(attr, value)
-            return
-        self.dict[name][attr] = value
+        else:
+            self.dict[name][attr] = value
+        self.defaults.pop(name, None)
     def pushSetting(self, name: str, attr: str, innerDefault: bool = False):
         self.validateAll()
         value = [x for x in getWithAttr(self.options, name, "name").attributes if x.attr == attr]

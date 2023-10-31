@@ -9,8 +9,8 @@ sys.path.append(r'C:\Users\acses\Documents\py3Settings\src\py3Settings')
 from main import InAttribute, AppSettings, Option, Attribute
 from typing import List
 # Example usage3
-attr1 = Attribute("attr1", lambda x: x > 0, default=1)
-attr2 = Attribute("attr2", lambda x: len(x) > 0, default="default_value")
+attr1 = Attribute("attr1", validate= lambda x: x > 0, default=1)
+attr2 = Attribute("attr2", validate=lambda x: len(x) > 0, default="default_value")
 inAttr = InAttribute("inAttr", [Option("sub_option",None, dc([attr1, attr2]))])
 my_option = Option("my_option", "option_id")
 my_second_option = Option("another", "whatItTalksInside")
@@ -37,7 +37,7 @@ print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 sub_app = my_settings.getSetting("another", "inAttr")
 sub_app.writeSetting("sub_option", "attr1", "Albert")
 all.pushSetting("another", "inAttr")
-all.putAll = True
+# all.putAll = True
 print("pass 2")
 # print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
