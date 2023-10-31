@@ -227,7 +227,7 @@ class AppSettings(Mapping):
                                     f"Value ({statement[attr]}) [{i}] Validation Failure for {attr_get.attr} of {option.name}"
                                 )
                             self.dict[option.name] = statement[attr]                                          #  Where the dict or defaults changes                  ###################################################################
-                    self.defaults[option.name] = statement[option.default.attr]
+                    # self.defaults[option.name] = statement[option.default.attr]
 
     def getSetting(self, name: str, attr: str | None):
         def getSettingClosure():
