@@ -256,7 +256,22 @@ class AppSettings(Mapping):
         #     raise KeyError(f"Attribute {attr} not found in settings")
 
     def getSettings(self):
-        return self.dict
+        all = {
+            "native": [],
+            "plain": []
+        }
+        for option in self.options:
+            sdict = self.retrieve(option, self.dict)
+            sdef = self.retrieve(option, self.defaults)
+            if sdict['native'] is not None:
+                all['native'].append(sdict['native'])
+            else:
+                all['native'].append(sdef['native'])
+            if sdict['plain'] is not None:
+                all['plain'].append(sdict['plain'])
+            else:
+                all['plain'].append(sdef['plain'])
+        return all
     
     def writeSetting(self, name: str, attr: str, value: Any):
         if self.dict.get(name) is None:

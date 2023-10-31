@@ -35,7 +35,7 @@ print(my_settings.getSetting("my_option", "attr1"))  # Output: 2
 #Instead, write from origin to replace default
 sub_app = my_settings.getSetting("my_option", "inAttr")
 sub_app.writeSetting("sub_option", "attr1", "Albert")
-all.pushSetting("my_option", "inAttr")
+# all.pushSetting("my_option", "inAttr")
 print("pass 2")
 # print(my_settings.getSetting("my_option", "inAttr"))  # Output: {'attr1': 2, 'attr2': 'new_value'}
 """reality:
