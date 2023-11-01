@@ -292,7 +292,11 @@ class AppSettings(Mapping):
                     all['plain'].append(specialDict(option.default.attr, sdict['plain']))
             elif sdef is not None:
                 all['native'].append(sdef['native'])
-                all['plain'].append(specialDict(option.default.attr, sdef['plain']))
+                if(type(sdef['plain']) is dict and type(next(iter(sdef['plain'].values()))) is AppSettings):
+                    for y,x in sdef['plain'].items():
+                        all["plain"].append(specialDict(option.default.attr, x.getSettings()['plain']))
+                else:
+                    all['plain'].append(specialDict(option.default.attr, sdef['plain']))
             else:
                 for x in self.options:
                     attr = x.default
