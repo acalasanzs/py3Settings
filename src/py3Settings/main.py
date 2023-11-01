@@ -287,16 +287,20 @@ class AppSettings(Mapping):
                 all['native'].append(sdict['native'])
                 if(type(sdict['plain']) is dict and type(next(iter(sdict['plain'].values()))) is AppSettings):
                     for y,x in sdict['plain'].items():
-                        all["plain"].append(specialDict(option.default.attr, x.getSettings()['plain']))
+                        all["plain"].append(specialDictFromList(option.default.attr, x.getSettings()['plain']))
                 else:
-                    all['plain'].append(specialDict(option.default.attr, sdict['plain']))
+                    if type(sdict['plain']) is not dict:
+                        sdict['plain'] = specialDict(option.default.attr, sdict['plain'])
+                    all['plain'].append(sdict['plain'])
             elif sdef is not None:
                 all['native'].append(sdef['native'])
                 if(type(sdef['plain']) is dict and type(next(iter(sdef['plain'].values()))) is AppSettings):
                     for y,x in sdef['plain'].items():
-                        all["plain"].append(specialDict(option.default.attr, x.getSettings()['plain']))
+                        all["plain"].append(specialDictFromList(option.default.attr, x.getSettings()['plain']))
                 else:
-                    all['plain'].append(specialDict(option.default.attr, sdef['plain']))
+                    if type(sdef['plain']) is not dict:
+                        sdef['plain'] = specialDict(option.default.attr, sdef['plain'])
+                    all['plain'].append(sdef['plain'])
             else:
                 for x in self.options:
                     attr = x.default

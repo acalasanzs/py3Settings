@@ -51,6 +51,14 @@ def specialDict(name, value):
     r = {}
     r[name] = value
     return r
+def specialDictFromList(name, list):
+    r = {}
+    for x in list:
+        for k, y in x.items():
+            if r.get(name) is None:
+                r[name] = {}
+            r[name][k] = y
+    return r
 def to_objectKeys(list: list):
     new = dict()
     for x in list:
