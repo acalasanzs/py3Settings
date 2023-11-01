@@ -227,7 +227,7 @@ class AppSettings(Mapping):
                     for attr in statement.keys():
                         attr_get = getWithAttr(option.attributes, attr, "attr")
                         if type(attr_get) is InAttribute:
-                            attr_get.options.load(list(statement[attr_get.attr]))
+                            attr_get.options.load([statement[attr_get.attr]])
                             attr_get.options.validateAll()
                             self.dict[option.name] = statement
                         else:
