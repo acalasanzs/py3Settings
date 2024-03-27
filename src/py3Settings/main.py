@@ -13,7 +13,7 @@ class Option:
     """
 
     def __init__(
-        self, name: str, attributes: ['Attribute | InAttribute'] = []
+        self, name: str, attributes: List['Attribute | InAttribute'] = []
     ):
         self.name = name
         self.attributes = []
@@ -186,35 +186,34 @@ class AppSettings(Mapping):
                     "plain": where[key]
                 }
     def searchMatch(self, option):
-            sdict = self.retrieve(option, self.dict)
-            if sdict is not None:
-                for sd in sdict['plain']:
-                    attr = getWithAttr(sdict['native'], sd, "attr")
-                    if type(attr) is Attribute:
-                        attr.validate(sdict['plain'][sd])
-                    elif type(attr) is InAttribute:
-                        attr.options.validateAll()
-                if len(option.attributes) > len(sdict['plain']):
-                    new = []
-                    for x in option.attributes:
-                        if type(x) is InAttribute:
-                            new.append(x)
-                    return new
-            return False
+        sdict = self.retrieve(option, self.dict)
+        if sdict is not None:
+            for sd in sdict['plain']:
+                attr = getWithAttr(sdict['native'], sd, "attr")
+                if type(attr) is Attribute:
+                    attr.validate(sdict['plain'][sd])
+                elif type(attr) is InAttribute:
+                    attr.options.validateAll()
+            if len(option.attributes) > len(sdict['plain']):
+                new = []
+                for x in option.attributes:
+                    if type(x) is InAttribute:
+                        new.append(x)
+                return new
+        return False
     def validateAll(self):
         i = 0          
-            
 
         # Only validates the ones that are neither default or undefined, which is only self.dict
         for key, value in self.dict.items():
             # For all the options that meet the above requirements
             for option in self.options:
-                
+
                 option_class = self.searchMatch(option)
                 if option_class:
                     for app in option_class:
                         app.options.validateAll()
-                    
+
             i += 1
         return f"validated {i} attributes of options"
     def load(self, data: list):
@@ -244,6 +243,8 @@ class AppSettings(Mapping):
             value = getWithAttr(self.options, name, "name")
             if value is not None:
                 try:
+                    if attr is None:
+                        return self.dict[value.name]
                     return self.dict[value.name][attr]
                 except KeyError:
                     if not self.dict.get(option.name):
@@ -257,8 +258,8 @@ class AppSettings(Mapping):
                 return getWithAttr(value.attributes, attr, "attr").options
             else:
                 return self.defaults[name][attr].get(self.defaults[attr])
-        if attr is None:
-            return getSettingClosure(self.defaults[name])
+        # if attr is None:
+        #     return getSettingClosure(self.defaults[name])
         # try:
         option = next((option for option in self.options if option.name == name), None)
         if option is None:
@@ -307,12 +308,15 @@ class AppSettings(Mapping):
                     self.pushSetting(x.name, attr.attr)
                 return self.getSettings()
         return all
-    
+
     def writeSetting(self, name: str, attr: str, value: Any):
         if self.dict.get(name) is None:
             self.dict[name] = specialDict(attr, value)
         else:
-            self.dict[name][attr] = value
+            if attr is None:
+                self.dict[name] = value
+            else:
+                self.dict[name][attr] = value
         self.defaults.pop(name, None)
     def pushSetting(self, name: str, attr: str, innerDefault: bool = False):
         self.validateAll()

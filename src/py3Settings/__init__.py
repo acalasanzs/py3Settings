@@ -5,4 +5,4 @@
 from .main import InAttribute, AppSettings, Option, Attribute, getWithAttr, addFormatSupport, showFileDefs, printObjProps, ROption, RIOption
 from .proxy import *
 # No hay recursividad
-__version__ = "3.0.0"
+__version__ = "3.3.6"
